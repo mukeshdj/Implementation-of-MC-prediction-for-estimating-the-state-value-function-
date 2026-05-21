@@ -1,81 +1,77 @@
-# Implementation-of-MC-prediction-for-estimating-the-state-value-function-
+# Implementation-of-MC-prediction-for-estimating-the-action-value-function.
 
 ## Date : 
 
 ## Aim
 
-To implement the Monte Carlo (MC) Prediction algorithm for estimating the state-value function of an agent interacting with an environment and to calculate and plot the estimated state-value function.
+To implement the Monte Carlo (MC) Prediction algorithm for estimating the action-value function \(Q(s,a)\) using sampled episodes and to analyze the learned action values in a Grid World environment.
 
 ---
 
 ## Objective
 
-- To understand Monte Carlo prediction in Reinforcement Learning.
-- To estimate the value of each state using sampled episodes.
-- To visualize the learned state-value function using a plot.
+- To understand Monte Carlo Prediction for action-value estimation.
+- To estimate the action-value function \(Q(s,a)\).
+- To learn state-action values from complete episodes.
+- To evaluate the quality of actions under a given policy.
 
 ---
 
 ## Theory
 
-Monte Carlo Prediction is a model-free reinforcement learning method used to estimate the value function of a policy. It learns directly from complete episodes of interaction with the environment.
+Monte Carlo Prediction is a model-free reinforcement learning technique used to estimate value functions directly from experience.
 
-The state-value function is defined as:
+The action-value function is defined as:
 
 \[
-V(s) = E[G_t \mid S_t = s]
+Q(s,a) = E[G_t \mid S_t=s, A_t=a]
 \]
 
 Where:
 
-- \(V(s)\) = Value of state \(s\)
-- \(G_t\) = Return obtained from time step \(t\)
+- \(Q(s,a)\) = Expected return for taking action \(a\) in state \(s\)
+- \(G_t\) = Discounted return after time step \(t\)
 
-Monte Carlo methods calculate the average return obtained after visiting a state multiple times.
+Monte Carlo methods estimate action values by averaging returns obtained after visiting each state-action pair over many episodes.
 
 ---
 
 ## Algorithm
 
-### Monte Carlo Prediction Algorithm
+### Monte Carlo Prediction for Action-Value Function
 
 1. Initialize:
-   - State-value function \(V(s)\)
-   - Returns list for each state
+   - Action-value function \(Q(s,a)\)
+   - Returns list for every state-action pair
 
-2. Generate an episode using the given policy.
+2. Generate an episode using a policy.
 
-3. For each state appearing in the episode:
+3. For every state-action pair in the episode:
    - Calculate the return \(G\)
-   - Store the return for that state
-   - Update the value function using average return
+   - Store the return for that pair
+   - Update \(Q(s,a)\) using the average return
 
-4. Repeat for many episodes.
+4. Repeat the process for many episodes.
 
-5. Plot the estimated state-value function.
+5. Display the estimated action-value function.
 
 ---
 
 ## Program
 
-```
-
-#Implementation of MC prediction for estimating the state-value function and 
-#Calculate and plot the state-value function estimate
+```python
+#Implementation of MC prediction for estimating the action-value function.
 import numpy as np
-import matplotlib.pyplot as plt
 from collections import defaultdict
 import gymnasium as gym
 
-# Create Environment
 env = gym.make("FrozenLake-v1", is_slippery=False)
 
-# Parameters
 gamma = 0.9
 episodes = 5000
 
-# State value function
-V = defaultdict(float)
+# Action-value function
+Q = defaultdict(float)
 
 # Returns storage
 returns = defaultdict(list)
@@ -86,15 +82,19 @@ def policy(state):
 
 # Generate episode
 def generate_episode():
+
     episode = []
 
     state, _ = env.reset()
+
     done = False
 
     while not done:
+
         action = policy(state)
 
         next_state, reward, terminated, truncated, _ = env.step(action)
+
         done = terminated or truncated
 
         episode.append((state, action, reward))
@@ -109,7 +109,8 @@ for ep in range(episodes):
     episode = generate_episode()
 
     G = 0
-    visited_states = set()
+
+    visited_pairs = set()
 
     # Traverse backward
     for t in reversed(range(len(episode))):
@@ -119,73 +120,36 @@ for ep in range(episodes):
         G = gamma * G + reward
 
         # First-visit MC
-        if state not in visited_states:
+        if (state, action) not in visited_pairs:
 
-            returns[state].append(G)
+            returns[(state, action)].append(G)
 
-            V[state] = np.mean(returns[state])
+            Q[(state, action)] = np.mean(returns[(state, action)])
 
-            visited_states.add(state)
+            visited_pairs.add((state, action))
 
-# Print Values
-print("State Value Function:\n")
+# Print Q values
+print("\nAction Value Function:\n")
 
-for s in range(env.observation_space.n):
-    print(f"State {s}: {V[s]:.3f}")
-
-# Convert to 4x4 grid
-value_grid = np.zeros((4,4))
-
-for state in range(16):
-    row = state // 4
-    col = state % 4
-
-    value_grid[row, col] = V[state]
-
-# Plot
-plt.figure(figsize=(6,6))
-
-plt.imshow(value_grid)
-
-for i in range(4):
-    for j in range(4):
-        plt.text(j, i,
-                 round(value_grid[i,j],2),
-                 ha='center',
-                 va='center',
-                 color='white',
-                 fontsize=12)
-
-plt.title("State Value Function Estimate")
-plt.colorbar()
-plt.show()
+for key in Q:
+    print(f"State-Action {key}: {Q[key]:.3f}")
 
 
 ```
 
+---
+
 ## Output
 
+<img width="424" height="499" alt="image" src="https://github.com/user-attachments/assets/08bcb67d-e236-44d2-8164-c2e3d2299bd2" />
+<img width="426" height="451" alt="image" src="https://github.com/user-attachments/assets/d05536ab-7e6f-475f-91b9-bb19200f9ec1" />
 
-<img width="312" height="366" alt="image" src="https://github.com/user-attachments/assets/941f51b8-ec7d-4e8f-ad27-bd8879687763" />
-
-
-### Output Graph
-
-The following heatmap is generated for the estimated state-value function:
-
-- Darker colors represent lower state values.
-- Terminal states have value 0.
-- States farther from terminal states have larger negative values.
-
-<img width="752" height="836" alt="image" src="https://github.com/user-attachments/assets/16c1829a-e6ed-4668-a6df-0ed015beb183" />
 
 ---
+
 ## Result
 
-Thus, the Monte Carlo Prediction algorithm was successfully implemented for estimating the state-value function of the environment. The value of each state was calculated using sampled episodes, and the estimated state-value function was plotted successfully using a heatmap.
+Thus, the Monte Carlo Prediction algorithm was successfully implemented for estimating the action-value function \(Q(s,a)\). The expected returns for different state-action pairs were calculated using sampled episodes generated from the environment.
 
-
-
-
-       
+---
 
